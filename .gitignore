@@ -1,5 +1,5 @@
+api/src/config/firebase-admin-credentials.json
 api/node_modules/
 api/.vscode/*
-api/firebase-admin-credentials.json
 api/.env
 .vscode/*
