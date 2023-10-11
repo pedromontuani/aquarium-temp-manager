@@ -4,16 +4,26 @@ import cors from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
 
-import {AquariumManager, Reports} from './controllers';
+import admin, { ServiceAccount } from 'firebase-admin';
 
-const app = express();
+import serviceAccount from './config/firebase-admin-credentials.json';
+import { AquariumManager, Reports } from './controllers';
 
-app.use(morgan('tiny'));
-app.use(cors());
-// app.use(helmet());
-app.use(express.json());
+export default () => {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount as ServiceAccount),
+    databaseURL: process.env.DATABASE_URL,
+  });
 
-app.use('/reports', Reports);
-app.use('/aquarium', AquariumManager);
+  const app = express();
 
-export default app;
+  app.use(morgan('tiny'));
+  app.use(cors());
+  app.use(helmet());
+  app.use(express.json());
+
+  app.use('/reports', Reports);
+  app.use('/aquarium', AquariumManager);
+
+  return app;
+};

@@ -33,7 +33,7 @@
 
 #define TEMPERATURE_PRECISION 11
 
-#define INTERVAL = 60000
+#define INTERVAL 60000
 
 WifiModule *wifiModule;
 TemperatureSensor *aquariumSensor;
@@ -83,5 +83,5 @@ void loop() {
     wifiModule->sendReport(highEnergyPeltierGroup, lowEnergyPeltierGroup,
                            aquariumSensor, ambientSensor);
 
-    delay(10000);
+    delay(INTERVAL);
 }
