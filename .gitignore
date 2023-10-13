@@ -1,6 +1,6 @@
 api/src/config/firebase-admin-credentials.json
 api/node_modules/
-api/dist/
+
 api/.vscode/*
 api/.env
 arduino/.vscode/*
