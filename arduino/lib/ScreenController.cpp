@@ -3,12 +3,10 @@
 
 #include "PeltierGroup.cpp"
 #include "TemperatureSensor.cpp"
+#include "../config.h"
 
 #include <Arduino.h>
 #include <oled.h>
-
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
 
 class ScreenController {
   private:
@@ -21,18 +19,19 @@ class ScreenController {
     void init() {
         oled->begin();
         oled->clear();
+        oled->set_contrast(SCREEN_CONSTRAST);
     };
 
   public:
     ScreenController(TemperatureSensor *aquariumSensor,
                      TemperatureSensor *ambientSensor,
-                     PeltierGroup highEnergy[], PeltierGroup lowEnergy[]) {
+                     PeltierGroup *highEnergy, PeltierGroup *lowEnergy) {
         this->aquariumSensor = aquariumSensor;
         this->ambientSensor = ambientSensor;
         this->highEnergy = highEnergy;
         this->lowEnergy = lowEnergy;
         this->oled =
-            new OLED(A4, A5, NO_RESET_PIN, 0x3D, SCREEN_WIDTH, SCREEN_HEIGHT);
+            new OLED(SCREEN_SDA, SCREEN_SCL, NO_RESET_PIN, SCREEN_ADDRESS, SCREEN_WIDTH, SCREEN_HEIGHT);
 
         init();
     };
@@ -42,17 +41,15 @@ class ScreenController {
     void update() {
         oled->clear();
 
-        oled->println(String(String(F("Aq. Temp.: ")) +
-                             String(aquariumSensor->getTemperature())));
+        oled->println(String(F("Aq. Temp.: ")) + String(aquariumSensor->getTemperature()));
+        oled->println();
+        oled->println(String(F("Ext. Temp.: ")) + String(ambientSensor->getTemperature()));
+        oled->println();
+        oled->println(String(F("H.E. Cooler: ")) + String((highEnergy->isActive() ? "ON" : "OFF")));
+        oled->println();
+        oled->println(String(F("L.E. Cooler: ")) + String((lowEnergy->isActive() ? "ON" : "OFF")));
 
-        oled->println(String(String(F("Ext. Temp.: ")) +
-                             String(ambientSensor->getTemperature())));
-
-        oled->println(String(String(F("H.E. Cooler: ")) +
-                             String(highEnergy->isActive())));
-
-        oled->println(
-            String(String(F("L.E. Cooler: ")) + String(lowEnergy->isActive())));
+        oled->display();
     }
 };
 

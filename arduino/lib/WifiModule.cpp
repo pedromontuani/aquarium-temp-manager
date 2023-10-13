@@ -1,112 +1,125 @@
 #ifndef WIFIMODULE_CPP
 #define WIFIMODULE_CPP
 
+#include "../config.h"
+#include "EepromManager.cpp"
+#include "ReportManager.cpp"
 #include <Arduino.h>
 #include <SoftwareSerial.h>
-#include <WiFiEsp.h>
-#include "ReportManager.cpp"
-
-#define LONG_TIMEOUT 3000
-#define SHORT_TIMEOUT 1000
-#define SERVER_IP "192.168.0.119"
-#define REPORTS_PATH "/reports"
 
 enum HttpMethod { GET, POST };
 
 class WifiModule {
   private:
     SoftwareSerial *espSerial;
-    byte status = WL_IDLE_STATUS;
-    WiFiEspClient *client;
     ReportManager *reportManager;
 
-    void initModule(String &ssid, String &password) {
-        while (WiFi.status() == WL_NO_SHIELD) {
-            delay(1000);
+    void initModule(String &ssid, String &password, String &macAddress) {
+        sendCommand("AT", SHORT_TIMEOUT);
+        sendCommand(F("AT+RST"), MAX_TIMEOUT);
+        delay(MAX_TIMEOUT);
+
+        if (!EepromManager::isEspConfigured()) {
+            connectToWifi(ssid, password, macAddress);
+            EepromManager::setEspConfigured();
         }
 
-        while (status != WL_CONNECTED) {
-            Serial.println(ssid);
-            status = WiFi.begin(ssid.c_str(), password.c_str());
-        }
+        sendCommand(F("AT+CIFSR"), SHORT_TIMEOUT);
+        sendCommand(F("AT+CIPMUX=1"), SHORT_TIMEOUT);
+    }
+
+    void connectToWifi(String &ssid, String &password, String &macAddress) {
+        sendCommand(F("AT+CWMODE_DEF=1"), SHORT_TIMEOUT);
+        sendCommand("AT+CWJAP_DEF=\"" + ssid + "\",\"" + password + "\",\"" +
+                        macAddress + "\"",
+                    MAX_TIMEOUT);
+        sendCommand(F("AT+CWAUTOCONN=1"), SHORT_TIMEOUT);
     }
 
     void connectToServer(String &host, int &port) {
-        client->connect(host.c_str(), port);
+        sendCommand("AT+CIPSTART=0,\"TCP\",\"" + host + "\"," + port,
+                    SHORT_TIMEOUT);
     }
 
-    void sendPost(String &path, String &host, String &data) {
-        client->println(String(F("POST ")) + path + String(F(" HTTP/1.0")));
-        client->println("Host: " + host);
-        client->println(F("Content-Type: application/json"));
-        client->println(String(F("Content-Length: ")) + String(data.length()));
-        client->println();
-        client->println(data);
-        client->println();
+    String sendPost(String &path, String &host, int &port, String &json) {
+        String data = "";
+        data += "POST " + path + F(" HTTP/1.0\r\n");
+        data = data + F("Content-Type: application/json") + "\r\n";
+        data +=
+            String(F("Content-Length: ")) + String(json.length()) + "\r\n\r\n";
+        data += json + "\r\n\r\n";
+
+        return data;
     }
 
     void sendGet(String &path, String &host) {
-        client->println(String(F("GET ")) + path + String(F(" HTTP/1.0")));
-        client->println("Host: " + host);
+        // TODO: implement
     }
 
     void sendRequest(String host, int port, HttpMethod method, String path,
-                     String data = "") {
+                     String &data) {
 
-        if (!client->connected()) {
-            connectToServer(host, port);
-        }
-
+        connectToServer(host, port);
+        String request;
         if (method == GET) {
             sendGet(path, host);
         } else {
-            sendPost(path, host, data);
+            request = sendPost(path, host, port, data);
         }
 
-        client->println(F("Connection: close"));
-        client->println();
-        client->flush();
+        request = request + F("Connection: close") + "\r\n";
+
+        sendCommand(String(F("AT+CIPSEND=0,")) + String(request.length()),
+                    SHORT_TIMEOUT);
+        sendCommand(request, MAX_TIMEOUT);
     }
 
     bool hasReponse(char *expected) {
-
-        bool response;
-
-        return response;
-        unsigned long startTime = millis();
-        while (millis() - startTime < 2000) {
-            response = client->find(expected);
-        }
-
-        return response;
+        // TODO : implement
     }
+
+    void readRes(int timeout = LONG_TIMEOUT) {}
+
+    void sendCommand(String cmd, int timeout = LONG_TIMEOUT,
+                     bool debug = DEBUG_MODE) {
+        espSerial->print(cmd + "\r\n");
+
+        long int time = millis();
+        while ((time + timeout) > millis()) {
+            while (espSerial->available()) {
+                char c = espSerial->read();
+                if (debug) {
+                    Serial.print(c);
+                }
+            }
+        }
+        if (debug) {
+            Serial.println();
+        }
+    };
 
   public:
     WifiModule(int rxPin, int txPin, long baudRate, String ssid,
-               String password) {
+               String password, String macAddress) {
         espSerial = new SoftwareSerial(rxPin, txPin);
         espSerial->begin(baudRate);
 
-        WiFi.init(espSerial);
-        client->setTimeout(5000);
-        client = new WiFiEspClient();
-        initModule(ssid, password);
+        initModule(ssid, password, macAddress);
     }
 
-    ~WifiModule() {
-        delete espSerial;
-        delete client;
-    }
+    ~WifiModule() { delete espSerial; }
 
-    
-    void sendReport(PeltierGroup *highEnergy, PeltierGroup *lowEnergy, TemperatureSensor *aquariumSensor,
-                  TemperatureSensor *externalSensor) {
-        this->reportManager = new ReportManager(highEnergy, lowEnergy, aquariumSensor, externalSensor);
+    void sendReport(PeltierGroup *highEnergy, PeltierGroup *lowEnergy,
+                    TemperatureSensor *aquariumSensor,
+                    TemperatureSensor *externalSensor) {
+        this->reportManager = new ReportManager(highEnergy, lowEnergy,
+                                                aquariumSensor, externalSensor);
 
         String json = reportManager->toJson();
         delete reportManager;
 
-        sendRequest(F(SERVER_IP), 3000, HttpMethod::POST, F(REPORTS_PATH), json);
+        sendRequest(F(SERVER_IP), SERVER_PORT, HttpMethod::POST, F(REPORTS_PATH),
+                    json);
     }
 };
 

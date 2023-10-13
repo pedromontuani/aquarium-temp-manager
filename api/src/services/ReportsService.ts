@@ -9,16 +9,16 @@ import { sendTempNotification } from './NotificationService';
 const saveReport = (report: ReportRequest) =>
   new Promise<String>((resolve, reject) => {
     const newReport: Report = {
-      aquariumTemp: report.aqTemp,
-      externalTemp: report.extTemp,
+      aquariumTemp: report.temp.aq,
+      externalTemp: report.temp.ext,
       cooler: {
         lowEnergy: {
-          state: report.leCooler.state,
-          power: report.leCooler.power,
+          state: report.le.on,
+          power: report.le.pw,
         },
         highEnergy: {
-          state: report.heCooler.state,
-          power: report.heCooler.power,
+          state: report.he.on,
+          power: report.he.pw,
         },
       },
       timestamp: Date.now(),
@@ -72,7 +72,7 @@ let uid: String;
     throw err;
   }
 
-  if (Number(report.aqTemp) > Number(process.env.TEMPERATURE_LIMIT)) {
-    await handleNotification(uid, report.aqTemp);
+  if (Number(report.temp.aq) > Number(process.env.TEMPERATURE_LIMIT)) {
+    await handleNotification(uid, report.temp.aq);
   }
 };

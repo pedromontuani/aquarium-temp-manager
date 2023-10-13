@@ -6,11 +6,15 @@
 class TemperatureSensor {
   protected:
     byte pin;
+    float temperature;
 
   protected:
-    TemperatureSensor(byte pin) {};
-    
+    TemperatureSensor(byte pin){
+      temperature = 0;
+    };
+
   public:
+    virtual void read() = 0;
     virtual float getTemperature() = 0;
 };
 

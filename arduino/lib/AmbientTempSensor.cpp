@@ -8,16 +8,21 @@ class AmbientTempSensor : public TemperatureSensor {
     public:
         AmbientTempSensor(byte pin) : TemperatureSensor(pin) {
             this->pin = pin;
-            dht = new dht11();
         };
 
         ~AmbientTempSensor() {
             delete dht;
         };
+
+        void read() {
+            dht = new dht11();
+            dht->read(pin);
+            this->temperature = dht->temperature;
+            delete dht;
+        }
     
         float getTemperature() {
-            dht->read(pin);
-            return dht->temperature;
+            return this->temperature;
         };
 
         int getHumidity() {

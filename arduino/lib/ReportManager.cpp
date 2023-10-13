@@ -2,12 +2,9 @@
 #define REPORT_MANAGER_CPP
 
 #include "ModuleState.cpp"
+#include "PeltierGroup.cpp"
 #include "TemperatureSensor.cpp"
 #include "WifiModule.cpp"
-#include "PeltierGroup.cpp"
-#include <ArduinoJson.h>
-
-#define POOL_SIZE 256
 
 class ReportManager {
   private:
@@ -16,13 +13,9 @@ class ReportManager {
     TemperatureSensor *aquariumSensor;
     TemperatureSensor *externalSensor;
 
-    void clear(DynamicJsonDocument &doc) {
-        doc.clear();
-        doc.garbageCollect();
-    }
-
   public:
-    ReportManager(PeltierGroup *highEnergy, PeltierGroup *lowEnergy, TemperatureSensor *aquariumSensor,
+    ReportManager(PeltierGroup *highEnergy, PeltierGroup *lowEnergy,
+                  TemperatureSensor *aquariumSensor,
                   TemperatureSensor *externalSensor) {
         this->highEnergyPeltierGroup = highEnergy;
         this->lowEnergyPeltierGroup = lowEnergy;
@@ -31,20 +24,17 @@ class ReportManager {
     }
 
     String toJson() {
-      DynamicJsonDocument doc(POOL_SIZE);
+        String json =
+            "{\"temp\":{\"aq\":" + String(aquariumSensor->getTemperature()) +
+            ",\"ext\":" + String(externalSensor->getTemperature()) +
+            "},\"he\":{\"on\":" + String(highEnergyPeltierGroup->isActive()) +
+            ",\"pw\":" +
+            String(highEnergyPeltierGroup->getCurrentConsumption()) +
+            "},\"le\":{\"on\":" + String(highEnergyPeltierGroup->isActive()) +
+            ",\"pw\":" +
+            String(highEnergyPeltierGroup->getCurrentConsumption()) + "}}";
 
-      doc["temp"]["aq"] = String(aquariumSensor->getTemperature());
-      doc["temp"]["ext"] = String(externalSensor->getTemperature());
-      doc["he"]["on"] = String(highEnergyPeltierGroup->isActive());
-      doc["he"]["pw"] = String(highEnergyPeltierGroup->getCurrentConsumption());
-      doc["le"]["on"] = String(highEnergyPeltierGroup->isActive());
-      doc["le"]["pw"] = String(highEnergyPeltierGroup->getCurrentConsumption());
-
-      String json = "";
-      serializeJson(doc, json);
-      clear(doc);
-
-      return json;
+        return json;
     }
 };
 

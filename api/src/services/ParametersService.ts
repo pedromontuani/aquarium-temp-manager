@@ -6,21 +6,21 @@ import Parameters from '../models/Parameters';
 export const updateParameters = async (report: ReportRequest) => {
     const parameters: Parameters = {
         water: {
-            temperature: report.aqTemp,
+            temperature: report.temp.aq,
             // TODO: implemet other parameters
         },
         ambient: {
-            temperature: report.extTemp,
+            temperature: report.temp.ext,
             // TODO: implemet other parameters
         },
         cooler: {
             lowEnergy: {
-                state: report.leCooler.state,
-                power: report.leCooler.power,
+                state: report.le.on,
+                power: report.le.pw,
             },
             highEnergy: {
-                state: report.heCooler.state,
-                power: report.heCooler.power,
+                state: report.he.on,
+                power: report.he.pw,
             },
         },
         timestamp: Date.now(),
