@@ -4,3 +4,4 @@ api/dist/
 api/.vscode/*
 api/.env
 arduino/.vscode/*
+arduino/config.h
