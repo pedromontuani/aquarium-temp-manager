@@ -19,14 +19,14 @@
 #define RX_PIN 12
 #define TX_PIN 13
 #define SERIAL_COMMUNICATION_SPEED 9600
-#define SSID "Pedro"
-#define PASSWORD "minhasenha"
-#define MAC_ADDRESS "34:0a:33:f8:2e:17" // Recommended. Necessary if you have multiple networks with same SSID (ex.: Mesh networks)
+#define SSID "YOUR_SSID"
+#define PASSWORD "YOUR_PASSWORD"
+#define MAC_ADDRESS "YOUR_MAC_ADDRESS" // Recommended. Necessary if you have multiple networks with same SSID (ex.: Mesh networks)
 #define RESET_ESP false // Used to clear ESP8266 saved network data
 #define MAX_TIMEOUT 15000
 #define LONG_TIMEOUT 8000
 #define SHORT_TIMEOUT 5000
-#define SERVER_IP "192.168.0.119" // Ip that is running the API
+#define SERVER_IP "SERVER_IP" // Ip that is running the API
 #define SERVER_PORT 3000
 #define REPORTS_PATH "/reports"
 #define DEBUG_MODE false
