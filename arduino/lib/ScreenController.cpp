@@ -41,9 +41,9 @@ class ScreenController {
     void update() {
         oled->clear();
 
-        oled->println(String(F("Aq. Temp.: ")) + String(aquariumSensor->getTemperature()));
+        oled->println(String(F("Aq. Temp.: ")) + String(aquariumSensor->getTemperature()) + "°C");
         oled->println();
-        oled->println(String(F("Ext. Temp.: ")) + String(ambientSensor->getTemperature()));
+        oled->println(String(F("Ext. Temp.: ")) + String(ambientSensor->getTemperature()) + "°C");
         oled->println();
         oled->println(String(F("H.E. Cooler: ")) + String((highEnergy->isActive() ? "ON" : "OFF")));
         oled->println();
