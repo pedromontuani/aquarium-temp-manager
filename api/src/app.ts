@@ -9,6 +9,8 @@ import admin, { ServiceAccount } from 'firebase-admin';
 import serviceAccount from './config/firebase-admin-credentials.json';
 import { AquariumManager, Reports } from './controllers';
 
+import CronJobs from './cron';
+
 export default () => {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount as ServiceAccount),
@@ -24,6 +26,8 @@ export default () => {
 
   app.use('/reports', Reports);
   app.use('/aquarium', AquariumManager);
+
+  CronJobs();
 
   return app;
 };

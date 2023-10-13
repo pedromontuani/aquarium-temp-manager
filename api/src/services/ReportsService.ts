@@ -42,6 +42,7 @@ const saveReport = (report: ReportRequest) =>
 const handleNotification = async (reportUid: String, temperature: number) => {
   const ref = getDatabase().ref('notifications').child('lastNotification');
   const data = await ref.once('value');
+
   if (data.exists()) {
     const notification: Notification = data.val();
     const sentAt = new Date(notification.sentAt);
@@ -63,7 +64,7 @@ const handleNotification = async (reportUid: String, temperature: number) => {
 };
 
 export const handleTemperatureReport = async (report: ReportRequest) => {
-let uid: String;
+  let uid: String;
   try {
     uid = await saveReport(report);
     console.log(`Report saved - ${new Date().toString()}`);
@@ -75,4 +76,22 @@ let uid: String;
   if (Number(report.temp.aq) > Number(process.env.TEMPERATURE_LIMIT)) {
     await handleNotification(uid, report.temp.aq);
   }
+};
+
+export const deleteOldReports = async () => {
+  const ref = getDatabase().ref('reports');
+
+  const itemsToDelete = ref
+    .orderByChild('timestamp')
+    .endAt(
+      Date.now() -
+        Number(process.env.REPORTS_RETENTION_DAYS) * 24 * 60 * 60 * 1000
+    );
+
+  const data = await itemsToDelete.once('value');
+
+  data.forEach(item => {
+    item.ref.remove();
+  })
+
 };
