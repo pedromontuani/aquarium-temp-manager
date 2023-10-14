@@ -1,7 +1,8 @@
 import { getDatabase } from 'firebase-admin/database';
 import { getTimeDifference } from '../utils/time';
-import DeviceStatus from 'src/models/DeviceStatus';
+import DeviceStatus from '../models/DeviceStatus';
 import { sendOfflineNotification } from './NotificationService';
+import errorNotify from '../utils/errorNotify';
 
 export const updateDeviceStatus = async (status: boolean) => {
   try {
@@ -16,7 +17,7 @@ export const updateDeviceStatus = async (status: boolean) => {
 
     console.log(`Device status updated - ${new Date().toString()}`);
   } catch (err) {
-    console.error('Error updating device status', err);
+    errorNotify('Error updating device status', err);
     throw err;
   }
 };
@@ -44,6 +45,6 @@ export const checkDeviceStatus = async () => {
     }
     console.log(`Device status checked - ${new Date().toString()}`);
   } catch (err) {
-    console.error('Error checking device status', err);
+    errorNotify('Error checking device status', err);
   }
 };

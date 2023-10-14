@@ -1,4 +1,5 @@
 import { getMessaging } from 'firebase-admin/messaging';
+import errorNotify from '../utils/errorNotify';
 
 const TEMPERATURE_TOPIC = 'temperature';
 
@@ -24,7 +25,7 @@ export const sendTempNotification = async (currentTemp: number) => {
     );
     console.log(`Notification sent - ${new Date().toString()}`);
   } catch (err) {
-    console.error('Error sending notification', err);
+    errorNotify('Error sending notification', err);
     throw err;
   }
 };
@@ -38,7 +39,7 @@ export const sendOfflineNotification = async () => {
         );
         console.log(`Notification sent - ${new Date().toString()}`);
     } catch(err) {
-        console.error('Error sending notification', err);
+        errorNotify('Error sending notification', err);
         throw err;
     }
 };

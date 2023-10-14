@@ -6,6 +6,7 @@ import Notification from '../models/Notification';
 import { getTimeDifference } from '../utils/time';
 import { sendTempNotification } from './NotificationService';
 import { updateDeviceStatus } from './DeviceStatus';
+import errorNotify from '../utils/errorNotify';
 
 const saveReport = (report: ReportRequest) =>
   new Promise<String>((resolve, reject) => {
@@ -71,7 +72,7 @@ export const handleTemperatureReport = async (report: ReportRequest) => {
     console.log(`Report saved - ${new Date().toString()}`);
     await updateDeviceStatus(true).catch(() => null);
   } catch (err) {
-    console.error('Error saving report', err);
+    errorNotify('Error saving report', err);
     throw err;
   }
 
@@ -105,6 +106,6 @@ export const deleteOldReports = async () => {
 
     console.log(`${numObjects} old reports deleted - ${new Date().toString()}`);
   } catch (err) {
-    console.error('Error deleting old reports', err);
+    errorNotify('Error deleting old reports', err);
   }
 };

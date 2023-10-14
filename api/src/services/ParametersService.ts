@@ -2,6 +2,7 @@ import {getDatabase} from 'firebase-admin/database';
 
 import ReportRequest from "../types/ReportRequest";
 import Parameters from '../models/Parameters';
+import errorNotify from '../utils/errorNotify';
 
 export const updateParameters = async (report: ReportRequest) => {
     const parameters: Parameters = {
@@ -31,6 +32,6 @@ export const updateParameters = async (report: ReportRequest) => {
         await getDatabase().ref('parameters').set(parameters);
         console.log('Parameters updated');
     } catch(err) {
-        console.error('Error updating parameters', err);
+        errorNotify('Error updating parameters', err);
     }
 }
