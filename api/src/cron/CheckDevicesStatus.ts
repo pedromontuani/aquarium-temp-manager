@@ -1,5 +1,5 @@
 import Cron from 'node-cron';
-import { checkDeviceStatus } from 'src/services/DeviceStatus';
+import { checkDeviceStatus } from '../services/DeviceStatus';
 
 export default () => {
     const minutes = process.env.DEVICE_STATUS_CHECK_INTERVAL_MINUTES;
