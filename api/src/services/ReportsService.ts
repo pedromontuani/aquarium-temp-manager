@@ -5,6 +5,7 @@ import Report from '../models/Report';
 import Notification from '../models/Notification';
 import { getTimeDifference } from '../utils/time';
 import { sendTempNotification } from './NotificationService';
+import { updateDeviceStatus } from './DeviceStatus';
 
 const saveReport = (report: ReportRequest) =>
   new Promise<String>((resolve, reject) => {
@@ -68,6 +69,7 @@ export const handleTemperatureReport = async (report: ReportRequest) => {
   try {
     uid = await saveReport(report);
     console.log(`Report saved - ${new Date().toString()}`);
+    await updateDeviceStatus(true).catch(() => null);
   } catch (err) {
     console.error('Error saving report', err);
     throw err;
@@ -79,19 +81,30 @@ export const handleTemperatureReport = async (report: ReportRequest) => {
 };
 
 export const deleteOldReports = async () => {
-  const ref = getDatabase().ref('reports');
+  try {
+    const ref = getDatabase().ref('reports');
 
-  const itemsToDelete = ref
-    .orderByChild('timestamp')
-    .endAt(
-      Date.now() -
-        Number(process.env.REPORTS_RETENTION_DAYS) * 24 * 60 * 60 * 1000
-    );
+    const itemsToDelete = ref
+      .orderByChild('timestamp')
+      .endAt(
+        Date.now() -
+          Number(process.env.REPORTS_RETENTION_DAYS) * 24 * 60 * 60 * 1000
+      );
 
-  const data = await itemsToDelete.once('value');
+    const data = await itemsToDelete.once('value');
 
-  data.forEach(item => {
-    item.ref.remove();
-  })
+    const updates: { [key: string]: null } = {};
 
+    data.forEach((item) => {
+      updates[`${item.key}`] = null;
+    });
+
+    await ref.update(updates);
+
+    const numObjects = data.numChildren();
+
+    console.log(`${numObjects} old reports deleted - ${new Date().toString()}`);
+  } catch (err) {
+    console.error('Error deleting old reports', err);
+  }
 };

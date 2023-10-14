@@ -1,5 +1,7 @@
+import CheckDevicesStatus from "./CheckDevicesStatus";
 import CleanReports from "./CleanReports"
 
 export default () => {
-    CleanReports();
+    CleanReports().start();
+    CheckDevicesStatus().start();
 }
