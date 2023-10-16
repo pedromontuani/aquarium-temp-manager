@@ -3,6 +3,11 @@
 #include "TemperatureSensor.cpp"
 #include <Arduino.h>
 
+#ifndef AQUARIUM_MANAGER_CPP
+#define AQUARIUM_MANAGER_CPP
+
+enum ColerMode { IDLE, COOLING };
+
 class AquariumManager {
   private:
     PeltierGroup *highEnergyPeltierGroup;
@@ -16,7 +21,31 @@ class AquariumManager {
     float goalTemperature;
     float tolerance;
 
+    byte mode = ColerMode::IDLE;
+
     void handleTemperature() {
+        switch (mode) {
+        case ColerMode::IDLE:
+            handleOffMode();
+            break;
+        case ColerMode::COOLING:
+            handleCoolingMode();
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    void handleOffMode() {
+        if (currentAquariumTemp >= goalTemperature + (tolerance / 2)) {
+            mode = ColerMode::COOLING;
+            turnOnLowOnly();
+            return;
+        }
+    }
+
+    void handleCoolingMode() {
         if (currentExternalTemp <= goalTemperature &&
             currentAquariumTemp <= (goalTemperature)) {
             turnOffComponents();
@@ -41,6 +70,7 @@ class AquariumManager {
 
         if (currentAquariumTemp <= (goalTemperature - tolerance)) {
             turnOffComponents();
+            mode = ColerMode::IDLE;
             return;
         }
     }
@@ -89,4 +119,8 @@ class AquariumManager {
         // TODO: implement change of goal temperature
         this->goalTemperature = goalTemperature;
     }
+
+    byte getMode() { return mode; }
 };
+
+#endif

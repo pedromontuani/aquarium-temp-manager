@@ -4,6 +4,7 @@
 #include "../config.h"
 #include "EepromManager.cpp"
 #include "ReportManager.cpp"
+#include "AquariumManager.cpp"
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 
@@ -12,10 +13,9 @@ enum HttpMethod { GET, POST };
 class WifiModule {
   private:
     SoftwareSerial *espSerial;
-    ReportManager *reportManager;
 
     void initModule(String &ssid, String &password, String &macAddress) {
-        sendCommand("AT", SHORT_TIMEOUT);
+        sendCommand(F("AT"), SHORT_TIMEOUT);
         sendCommand(F("AT+RST"), MAX_TIMEOUT);
         delay(MAX_TIMEOUT);
 
@@ -111,9 +111,10 @@ class WifiModule {
 
     void sendReport(PeltierGroup *highEnergy, PeltierGroup *lowEnergy,
                     TemperatureSensor *aquariumSensor,
-                    TemperatureSensor *externalSensor) {
-        this->reportManager = new ReportManager(highEnergy, lowEnergy,
-                                                aquariumSensor, externalSensor);
+                    TemperatureSensor *externalSensor, AquariumManager *aquariumManager) {
+        
+        ReportManager *reportManager = new ReportManager(highEnergy, lowEnergy,
+                                                aquariumSensor, externalSensor, aquariumManager);
 
         String json = reportManager->toJson();
         delete reportManager;

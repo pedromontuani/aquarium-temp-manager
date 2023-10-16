@@ -5,6 +5,7 @@
 #include "PeltierGroup.cpp"
 #include "TemperatureSensor.cpp"
 #include "WifiModule.cpp"
+#include "AquariumManager.cpp"
 
 class ReportManager {
   private:
@@ -12,15 +13,18 @@ class ReportManager {
     PeltierGroup *lowEnergyPeltierGroup;
     TemperatureSensor *aquariumSensor;
     TemperatureSensor *externalSensor;
+    AquariumManager *aquariumManager;
+
 
   public:
     ReportManager(PeltierGroup *highEnergy, PeltierGroup *lowEnergy,
                   TemperatureSensor *aquariumSensor,
-                  TemperatureSensor *externalSensor) {
+                  TemperatureSensor *externalSensor, AquariumManager *aquariumManager) {
         this->highEnergyPeltierGroup = highEnergy;
         this->lowEnergyPeltierGroup = lowEnergy;
         this->aquariumSensor = aquariumSensor;
         this->externalSensor = externalSensor;
+        this->aquariumManager = aquariumManager;
     }
 
     String toJson() {
@@ -32,7 +36,7 @@ class ReportManager {
             String(highEnergyPeltierGroup->getCurrentConsumption()) +
             "},\"le\":{\"on\":" + String(highEnergyPeltierGroup->isActive()) +
             ",\"pw\":" +
-            String(highEnergyPeltierGroup->getCurrentConsumption()) + "}}";
+            String(highEnergyPeltierGroup->getCurrentConsumption()) + "}, \"md\":\"" + String(this->aquariumManager->getMode()) + "\"}";
 
         return json;
     }

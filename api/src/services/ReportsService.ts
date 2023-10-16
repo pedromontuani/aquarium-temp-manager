@@ -7,12 +7,14 @@ import { getTimeDifference } from '../utils/time';
 import { sendTempNotification } from './NotificationService';
 import { updateDeviceStatus } from './DeviceStatus';
 import errorNotify from '../utils/errorNotify';
+import { getCoolerMode } from '../utils/coolerMode';
 
 const saveReport = (report: ReportRequest) =>
   new Promise<String>((resolve, reject) => {
     const newReport: Report = {
       aquariumTemp: report.temp.aq,
       externalTemp: report.temp.ext,
+      mode: getCoolerMode(report.md),
       cooler: {
         lowEnergy: {
           state: report.le.on,

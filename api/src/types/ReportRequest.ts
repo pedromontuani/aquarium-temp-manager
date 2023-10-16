@@ -1,3 +1,7 @@
+export enum Mode {IDLE, COOLING};
+
+export type ModeLabels = 'IDLE' | 'COOLING';
+
 export default interface ReportRequest {
   temp: {
     aq: number;
@@ -11,4 +15,5 @@ export default interface ReportRequest {
     on: boolean;
     pw: number;
   };
+  md: Mode;
 }

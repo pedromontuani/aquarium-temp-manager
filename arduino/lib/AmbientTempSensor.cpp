@@ -1,13 +1,15 @@
 #include "TemperatureSensor.cpp"
-#include <dht11.h>
+#include <DHT.h>
 
 class AmbientTempSensor : public TemperatureSensor {
     private:
-        dht11 *dht;
+        DHT *dht;
+        float humidity;
     
     public:
         AmbientTempSensor(byte pin) : TemperatureSensor(pin) {
             this->pin = pin;
+            this->humidity = 0;
         };
 
         ~AmbientTempSensor() {
@@ -15,9 +17,9 @@ class AmbientTempSensor : public TemperatureSensor {
         };
 
         void read() {
-            dht = new dht11();
-            dht->read(pin);
-            this->temperature = dht->temperature;
+            dht = new DHT(pin, DHT22);
+            this->temperature = dht->readTemperature();
+            this->humidity = dht->readHumidity();
             delete dht;
         }
     
@@ -26,7 +28,6 @@ class AmbientTempSensor : public TemperatureSensor {
         };
 
         int getHumidity() {
-            dht->read(pin);
-            return dht->humidity;
+            return this->humidity;
         };
 };

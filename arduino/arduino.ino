@@ -72,7 +72,7 @@ void handleScreen() {
 
 void handleWifi() {
     wifi->sendReport(highEnergyPeltierGroup, lowEnergyPeltierGroup,
-                     aquariumSensor, ambientSensor);
+                     aquariumSensor, ambientSensor, aquariumManager);
 }
 
 void handleSensors() {

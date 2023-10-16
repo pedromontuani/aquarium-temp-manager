@@ -3,7 +3,7 @@
 
 // Sensors pins
 #define AQUARIUM_SENSOR_PIN 4
-#define AMBIENT_SENSOR_PIN A0
+#define AMBIENT_SENSOR_PIN 10
 #define TEMPERATURE_PRECISION 11
 
 // Relay ports

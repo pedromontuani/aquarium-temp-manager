@@ -54,10 +54,10 @@ class ScreenController {
         
         oled->println();
         oled->println(String(F("H.E. Cooler: ")) +
-                      String((highEnergy->isActive() ? "ON" : "OFF")));
+                      String((highEnergy->isActive() ? F("ON") : F("OFF"))));
         oled->println();
         oled->println(String(F("L.E. Cooler: ")) +
-                      String((lowEnergy->isActive() ? "ON" : "OFF")));
+                      String((lowEnergy->isActive() ? F("ON") : F("OFF"))));
 
         oled->display();
     }

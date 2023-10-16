@@ -1,3 +1,5 @@
+import { ModeLabels } from "../types/ReportRequest";
+
 export interface WaterParameters {
   temperature: number;
   ph?: number;
@@ -12,6 +14,7 @@ export interface AmbientParameters {
 }
 
 export interface Cooler {
+  mode: ModeLabels;
   lowEnergy: {
     state: boolean;
     power: number;
