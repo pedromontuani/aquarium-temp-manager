@@ -18,11 +18,9 @@ const saveReport = (report: ReportRequest) =>
       cooler: {
         lowEnergy: {
           state: report.le.on,
-          power: report.le.pw,
         },
         highEnergy: {
           state: report.he.on,
-          power: report.he.pw,
         },
       },
       timestamp: Date.now(),

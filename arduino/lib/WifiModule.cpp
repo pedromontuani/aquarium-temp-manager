@@ -2,124 +2,116 @@
 #define WIFIMODULE_CPP
 
 #include "../config.h"
-#include "EepromManager.cpp"
-#include "ReportManager.cpp"
 #include "AquariumManager.cpp"
+#include "ReportManager.cpp"
 #include <Arduino.h>
-#include <SoftwareSerial.h>
+#include <HTTPClient.h>
+#include <WiFi.h>
+#include <WiFiClient.h>
 
 enum HttpMethod { GET, POST };
 
 class WifiModule {
   private:
-    SoftwareSerial *espSerial;
+    HTTPClient *http;
 
-    void initModule(String &ssid, String &password, String &macAddress) {
-        sendCommand(F("AT"), SHORT_TIMEOUT);
-        sendCommand(F("AT+RST"), MAX_TIMEOUT);
-        delay(MAX_TIMEOUT);
-
-        if (!EepromManager::isEspConfigured()) {
-            connectToWifi(ssid, password, macAddress);
-            EepromManager::setEspConfigured();
-        }
-
-        sendCommand(F("AT+CIFSR"), SHORT_TIMEOUT);
-        sendCommand(F("AT+CIPMUX=1"), SHORT_TIMEOUT);
+    void initModule(String &ssid, String &password) {
+        WiFi.mode(WIFI_STA);
+        WiFi.disconnect();
+        WiFi.setHostname("AquariumManager");
+        this->connectToWifi(ssid, password);
     }
 
-    void connectToWifi(String &ssid, String &password, String &macAddress) {
-        sendCommand(F("AT+CWMODE_DEF=1"), SHORT_TIMEOUT);
-        sendCommand("AT+CWJAP_DEF=\"" + ssid + "\",\"" + password + "\",\"" +
-                        macAddress + "\"",
-                    MAX_TIMEOUT);
-        sendCommand(F("AT+CWAUTOCONN=1"), SHORT_TIMEOUT);
-    }
+    void connectToWifi(String &ssid, String &password) {
+        WiFi.begin(ssid.c_str(), password.c_str());
+        int tryDelay = 500;
+        int numberOfTries = 20;
 
-    void connectToServer(String &host, int &port) {
-        sendCommand("AT+CIPSTART=0,\"TCP\",\"" + host + "\"," + port,
-                    SHORT_TIMEOUT);
-    }
+        // Wait for the WiFi event
+        while (true) {
+            switch (WiFi.status()) {
+            case WL_NO_SSID_AVAIL:
+                Serial.println("[WiFi] SSID not found");
+                break;
+            case WL_CONNECT_FAILED:
+                Serial.print("[WiFi] Failed - WiFi not connected! Reason: ");
+                return;
+                break;
+            case WL_CONNECTION_LOST:
+                Serial.println("[WiFi] Connection was lost");
+                break;
+            case WL_SCAN_COMPLETED:
+                Serial.println("[WiFi] Scan is completed");
+                break;
+            case WL_DISCONNECTED:
+                Serial.println("[WiFi] WiFi is disconnected");
+                break;
+            case WL_CONNECTED:
+                Serial.println("[WiFi] WiFi is connected!");
+                Serial.print("[WiFi] IP address: ");
+                Serial.println(WiFi.localIP());
+                return;
+                break;
+            default:
+                Serial.print("[WiFi] WiFi Status: ");
+                Serial.println(WiFi.status());
+                break;
+            }
+            delay(tryDelay);
 
-    String sendPost(String &path, String &host, int &port, String &json) {
-        String data = "";
-        data += "POST " + path + F(" HTTP/1.0\r\n");
-        data = data + F("Content-Type: application/json") + "\r\n";
-        data +=
-            String(F("Content-Length: ")) + String(json.length()) + "\r\n\r\n";
-        data += json + "\r\n\r\n";
-
-        return data;
-    }
-
-    void sendGet(String &path, String &host) {
-        // TODO: implement
-    }
-
-    void sendRequest(String host, int port, HttpMethod method, String path,
-                     String &data) {
-
-        connectToServer(host, port);
-        String request;
-        if (method == GET) {
-            sendGet(path, host);
-        } else {
-            request = sendPost(path, host, port, data);
-        }
-
-        request = request + F("Connection: close") + "\r\n";
-
-        sendCommand(String(F("AT+CIPSEND=0,")) + String(request.length()),
-                    SHORT_TIMEOUT);
-        sendCommand(request, MAX_TIMEOUT);
-    }
-
-    bool hasReponse(char *expected) {
-        // TODO : implement
-    }
-
-    void readRes(int timeout = LONG_TIMEOUT) {}
-
-    void sendCommand(String cmd, int timeout = LONG_TIMEOUT,
-                     bool debug = DEBUG_MODE) {
-        espSerial->print(cmd + "\r\n");
-
-        long int time = millis();
-        while ((time + timeout) > millis()) {
-            while (espSerial->available()) {
-                char c = espSerial->read();
-                if (debug) {
-                    Serial.print(c);
-                }
+            if (numberOfTries <= 0) {
+                Serial.print("[WiFi] Failed to connect to WiFi!");
+                // Use disconnect function to force stop trying to connect
+                WiFi.disconnect();
+                return;
+            } else {
+                numberOfTries--;
             }
         }
-        if (debug) {
-            Serial.println();
-        }
-    };
-
-  public:
-    WifiModule(int rxPin, int txPin, long baudRate, String ssid,
-               String password, String macAddress) {
-        espSerial = new SoftwareSerial(rxPin, txPin);
-        espSerial->begin(baudRate);
-
-        initModule(ssid, password, macAddress);
     }
 
-    ~WifiModule() { delete espSerial; }
+    bool sendRequest(String host, int port, HttpMethod method, String path,
+                     String &data) {
+        if (WiFi.status() == WL_CONNECTED) {
+            http = new HTTPClient();
+            http->begin(host, port, path);
+
+            http->addHeader("Content-Type", "application/json");
+            http->addHeader("Connection", "close");
+
+            int httpResponseCode = 0;
+
+            switch (method) {
+            case HttpMethod::GET:
+                httpResponseCode = http->GET();
+                break;
+            case HttpMethod::POST:
+                httpResponseCode = http->POST(data);
+                break;
+            }
+
+            delete http;
+
+            return httpResponseCode == HTTP_CODE_OK;
+        }
+    }
+
+  public:
+    WifiModule(String ssid, String password) { initModule(ssid, password); }
 
     void sendReport(PeltierGroup *highEnergy, PeltierGroup *lowEnergy,
                     TemperatureSensor *aquariumSensor,
-                    TemperatureSensor *externalSensor, AquariumManager *aquariumManager) {
-        
-        ReportManager *reportManager = new ReportManager(highEnergy, lowEnergy,
-                                                aquariumSensor, externalSensor, aquariumManager);
+                    TemperatureSensor *externalSensor,
+                    AquariumManager *aquariumManager) {
+
+        ReportManager *reportManager =
+            new ReportManager(highEnergy, lowEnergy, aquariumSensor,
+                              externalSensor, aquariumManager);
 
         String json = reportManager->toJson();
         delete reportManager;
 
-        sendRequest(F(SERVER_IP), SERVER_PORT, HttpMethod::POST, F(REPORTS_PATH),
+        sendRequest(SERVER_IP, SERVER_PORT, HttpMethod::POST, REPORTS_PATH,
                     json);
     }
 };

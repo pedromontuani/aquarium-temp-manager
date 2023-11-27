@@ -6,9 +6,7 @@
 #include "lib/ScreenController.cpp"
 #include "lib/TemperatureSensor.cpp"
 #include "lib/WifiModule.cpp"
-#include "lib/EepromManager.cpp"
 #include <Arduino.h>
-#include <SoftwareSerial.h>
 
 #include "config.h"
 
@@ -33,12 +31,7 @@ ScreenController *screen;
 void setup() {
     Serial.begin(115200);
 
-    if(RESET_ESP) {
-       EepromManager::resetEsp();
-    }
-
-    wifi = new WifiModule(RX_PIN, TX_PIN, SERIAL_COMMUNICATION_SPEED, F(SSID),
-                          F(PASSWORD), F(MAC_ADDRESS));
+    wifi = new WifiModule(WIFI_SSID, PASSWORD);
 
     highEnergyPeltierGroup = new PeltierGroup(peltierCellsArray_1, 3);
     lowEnergyPeltierGroup = new PeltierGroup(peltierCellsArray_2, 2);
@@ -49,13 +42,12 @@ void setup() {
     aquariumManager = new AquariumManager(
         highEnergyPeltierGroup, lowEnergyPeltierGroup, aquariumSensor,
         aquariumSensor, GOAL_TEMPERATURE, TOLERANCE);
-
 }
 
 void loop() {
     handleSensors();
     aquariumManager->update();
-    
+
     handleScreen();
     handleWifi();
 

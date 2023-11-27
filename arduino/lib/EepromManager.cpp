@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include <EEPROM.h>
 
 #define ESP_SETTINGS_ADDRESS 0
@@ -13,7 +12,9 @@ class EepromManager {
   public:
     static void resetEsp() { EEPROM.update(ESP_SETTINGS_ADDRESS, 0); }
 
-    static void setEspConfigured() { EepromManager::write(ESP_SETTINGS_ADDRESS, 1); }
+    static void setEspConfigured() {
+        EepromManager::write(ESP_SETTINGS_ADDRESS, 1);
+    }
 
     static bool isEspConfigured() {
         return EEPROM.read(ESP_SETTINGS_ADDRESS) == 1;

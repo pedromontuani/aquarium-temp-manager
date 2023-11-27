@@ -19,11 +19,9 @@ export const updateParameters = async (report: ReportRequest) => {
       mode: getCoolerMode(report.md),
       lowEnergy: {
         state: report.le.on,
-        power: report.le.pw,
       },
       highEnergy: {
         state: report.he.on,
-        power: report.he.pw,
       },
     },
     timestamp: Date.now(),

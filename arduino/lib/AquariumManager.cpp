@@ -6,7 +6,7 @@
 #ifndef AQUARIUM_MANAGER_CPP
 #define AQUARIUM_MANAGER_CPP
 
-enum ColerMode { IDLE, COOLING };
+enum CoolerMode { IDLE, COOLING };
 
 class AquariumManager {
   private:
@@ -21,14 +21,14 @@ class AquariumManager {
     float goalTemperature;
     float tolerance;
 
-    byte mode = ColerMode::IDLE;
+    byte mode = CoolerMode::COOLING;
 
     void handleTemperature() {
         switch (mode) {
-        case ColerMode::IDLE:
+        case CoolerMode::IDLE:
             handleOffMode();
             break;
-        case ColerMode::COOLING:
+        case CoolerMode::COOLING:
             handleCoolingMode();
             break;
 
@@ -39,7 +39,7 @@ class AquariumManager {
 
     void handleOffMode() {
         if (currentAquariumTemp >= goalTemperature + (tolerance / 2)) {
-            mode = ColerMode::COOLING;
+            mode = CoolerMode::COOLING;
             turnOnLowOnly();
             return;
         }
@@ -47,7 +47,7 @@ class AquariumManager {
 
     void handleCoolingMode() {
         if (currentExternalTemp <= goalTemperature &&
-            currentAquariumTemp <= (goalTemperature)) {
+            currentAquariumTemp <= (goalTemperature + tolerance)) {
             turnOffComponents();
             return;
         }
@@ -70,7 +70,7 @@ class AquariumManager {
 
         if (currentAquariumTemp <= (goalTemperature - tolerance)) {
             turnOffComponents();
-            mode = ColerMode::IDLE;
+            mode = CoolerMode::IDLE;
             return;
         }
     }
